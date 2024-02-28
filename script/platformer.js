@@ -166,7 +166,7 @@ $(document).ready(function() {
     //drawImage();
     animate();
 
-    motion = true;
+    motion = false;
     gyroUpdated = function(e) {
         var accX = (1/9.8)*-e.accX;
         var accY = (1/9.8)*-(e.accY-9.8);
