@@ -1,5 +1,5 @@
-var sw = 360; //window.innerWidth;
-var sh = 669; //window.innerHeight;
+var sw = window.innerWidth;
+var sh = window.innerHeight;
 
 var cameraParams = {
    fov: 75, aspectRatio: (sw/sh), near: 0.1, far: 50
