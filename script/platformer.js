@@ -249,9 +249,9 @@ $(document).ready(function() {
     restartView.style.position = "absolute";
     restartView.style.userSelect = "none";
     restartView.style.objectFit = "cover";
-    restartView.style.display = "none";
+    //restartView.style.display = "none";
     restartView.style.animationDuration = "1s";
-    restartView.innerText = "RESTART";
+    restartView.innerText = "PLAY";
     restartView.style.color = "#000";
     restartView.style.fontWeight = "900";
     restartView.style.fontSize = "25px";
@@ -289,6 +289,7 @@ $(document).ready(function() {
 
 var failed = function(obj=false) {
     text = "FAILED";
+    restartView.innerText = "RESTART";
 
     textView.innerText = text;
     textView.style.display = "initial";

@@ -37,8 +37,6 @@ var load3D = function() {
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
 
-    var perfectMargin = 0.01;
-
     renderer.domElement.onclick = function(e) {
         mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
         mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
@@ -55,99 +53,7 @@ var load3D = function() {
         if (intersects.length > 0) {
             if (intersects[0].object.userData.tag != "row") return;
 
-            for (var n = 0; n < positionArr.length; n++) {
-                var obj = positionArr[n];
-                if (obj.direction != intersects[0].object.userData.direction)
-                continue;
-
-                obj.remove = true;
-                scene.remove(obj.mesh);
-
-                var hit = (1/5)*Math.abs(1-obj.y);
-
-                if (hit >= 0 && hit <= (0 + perfectMargin)) text = "PERFECT";
-                else if (hit < 0.25) text = "GREAT";
-                else if (hit < 0.75) text = "BOM";
-                else text = "POOR";
-
-                if (doubleHit && lastHit == 0) poorCount -= 1;
-                if (doubleHit && lastHit == 1) goodCount -= 1;
-                if (doubleHit && lastHit == 2) greatCount -= 1;
-                if (doubleHit && lastHit == 3) perfectCount -= 1;
-
-                switch (text) {
-                    case "POOR":
-                        if (predictedHit == 0) lastHit = 0;
-                        if (n == 0 && predictedHit > 0)
-                        poorCount += (predictedHit+1);
-                        else if (n == 0 && predictedHit == 0)
-                        poorCount += 1;
-                        break;
-                    case "BOM":
-                        if (predictedHit == 0) lastHit = 1;
-                        if (n == 0 && predictedHit > 0)
-                        goodCount += (predictedHit+1);
-                        else if (n == 0 && predictedHit == 0)
-                        goodCount += 1;
-                        break;
-                    case "GREAT":
-                        if (predictedHit == 0) lastHit = 2;
-                        if (n == 0 && predictedHit > 0)
-                        greatCount += (predictedHit+1);
-                        else if (n == 0 && predictedHit == 0)
-                        greatCount += 1;
-                        break;
-                    case "PERFECT":
-                        if (predictedHit == 0) lastHit = 3;
-                        if (n == 0 && predictedHit > 0)
-                        perfectCount += (predictedHit+1);
-                        else if (n == 0 && predictedHit == 0)
-                        perfectCount += 1;
-                        break;
-                }
-
-                var suffix = "";
-                if (n == 0 && predictedHit == 1) suffix = "DOUBLE ";
-                if (n == 0 && predictedHit == 2) suffix = "TRIPLE ";
-                if (n == 0 && predictedHit == 3) suffix = "QUADRA ";
-                if (n == 0 && predictedHit == 4) suffix = "PENTA ";
-                if (n == 0 && predictedHit == 5) suffix = "HEXA ";
-                if (n == 0 && predictedHit == 6) suffix = "HEPTA ";
-                if (n == 0 && predictedHit == 7) suffix = "OCTA ";
-                if (n == 0 && predictedHit == 8) suffix = "NONA ";
-                if (n == 0 && predictedHit == 9) suffix = "DECA ";
-
-                if (n == 0 && predictedHit > 0) {
-                    sfxPool.play(
-                    "audio/sfx-"+(suffix.toLowerCase().trimEnd())+".wav", 
-                    function() {
-                        sfxPool.play("audio/sfx-"+(text.toLowerCase())+".wav");
-                    });
-                }
-                else sfxPool.play("audio/sfx-"+(text.toLowerCase())+".wav");
-                //oscillator.frequency.value = (1-hit)*250;
-
-                showText(suffix + text);
-                doubleHit = false;
-                tripleHit = false;
-                quadraHit = false;
-
-                //pause = true;
-                startX = lineArr[obj.direction];
-                startY = ((sh/2)+(sh/4));
-                objX = lineArr[obj.direction];
-                objY = obj.y;
-
-                positionArr = positionArr.filter((o) => { return !o.remove; });
-
-                if (predictedHit == 0) predictedHit = n;
-                else if (n == 0 && predictedHit > 0) predictedHit = 0;
-                else if (n > 0 && n >= predictedHit) predictedHit = n+1;
-
-                scoreView.innerText = (poorCount+(goodCount*2)+
-                (greatCount*3)+(perfectCount*4)).toString().padStart(3, "0");
-                break;
-            }
+            advance(intersects[0].object.userData.direction);
 
             return;
             var timeout;
@@ -312,7 +218,9 @@ var load3D = function() {
     var updateTime = 0;
     var resetTime = 2500;
 
-    pause = false;
+    perfectMargin = 0.01;
+
+    pause = true;
 
     poorCount = 0;
     goodCount = 0;
@@ -328,7 +236,7 @@ var load3D = function() {
 
     predictedHit = 0;
 
-    sfxPool.playbackRate = 2;
+    sfxPool.playbackRate = 1;
 
     render = true;
     iterations = 9999999999;
@@ -336,7 +244,10 @@ var load3D = function() {
         iterations -= 1;
         if (iterations > 0 && render)
         req = requestAnimationFrame( animateThreejs );
-        if (pause) return;
+        if (pause) { 
+            renderer.render( scene, virtualCamera );
+            return;
+        }
 
         var currentTime = new Date().getTime();
         if (currentTime - updateTime > resetTime) {
@@ -374,6 +285,119 @@ var load3D = function() {
     createMap();
     animateThreejs();
 }
+
+var advance = function(direction) {
+    for (var n = 0; n < positionArr.length; n++) {
+        var obj = positionArr[n];
+        if (obj.direction != direction)
+        continue;
+
+        obj.remove = true;
+        scene.remove(obj.mesh);
+
+        var hit = (1/5)*Math.abs(1-obj.y);
+
+        if (hit >= 0 && hit <= (0 + perfectMargin)) text = "PERFECT";
+        else if (hit < 0.25) text = "GREAT";
+        else if (hit < 0.75) text = "BOM";
+        else text = "POOR";
+
+        if (doubleHit && lastHit == 0) poorCount -= 1;
+        if (doubleHit && lastHit == 1) goodCount -= 1;
+        if (doubleHit && lastHit == 2) greatCount -= 1;
+        if (doubleHit && lastHit == 3) perfectCount -= 1;
+
+        switch (text) {
+            case "POOR":
+                if (predictedHit == 0) lastHit = 0;
+                if (n == 0 && predictedHit > 0)
+                poorCount += (predictedHit+1);
+                else if (n == 0 && predictedHit == 0)
+                poorCount += 1;
+                break;
+            case "BOM":
+                if (predictedHit == 0) lastHit = 1;
+                if (n == 0 && predictedHit > 0)
+                goodCount += (predictedHit+1);
+                else if (n == 0 && predictedHit == 0)
+                goodCount += 1;
+                break;
+            case "GREAT":
+                if (predictedHit == 0) lastHit = 2;
+                if (n == 0 && predictedHit > 0)
+                greatCount += (predictedHit+1);
+                else if (n == 0 && predictedHit == 0)
+                greatCount += 1;
+                break;
+            case "PERFECT":
+                if (predictedHit == 0) lastHit = 3;
+                if (n == 0 && predictedHit > 0)
+                perfectCount += (predictedHit+1);
+                else if (n == 0 && predictedHit == 0)
+                perfectCount += 1;
+                break;
+        }
+
+        var suffix = "";
+        if (n == 0 && predictedHit == 1) suffix = "DOUBLE ";
+        if (n == 0 && predictedHit == 2) suffix = "TRIPLE ";
+        if (n == 0 && predictedHit == 3) suffix = "QUADRA ";
+        if (n == 0 && predictedHit == 4) suffix = "PENTA ";
+        if (n == 0 && predictedHit == 5) suffix = "HEXA ";
+        if (n == 0 && predictedHit == 6) suffix = "HEPTA ";
+        if (n == 0 && predictedHit == 7) suffix = "OCTA ";
+        if (n == 0 && predictedHit == 8) suffix = "NONA ";
+        if (n == 0 && predictedHit == 9) suffix = "DECA ";
+
+        if (n == 0 && predictedHit > 0) {
+            sfxPool.play(
+            "audio/sfx-"+(suffix.toLowerCase().trimEnd())+".wav", 
+            function() {
+                sfxPool.play("audio/sfx-"+(text.toLowerCase())+".wav");
+            });
+        }
+        else sfxPool.play("audio/sfx-"+(text.toLowerCase())+".wav");
+        //oscillator.frequency.value = (1-hit)*250;
+
+        showText(suffix + text);
+        doubleHit = false;
+        tripleHit = false;
+        quadraHit = false;
+
+        //pause = true;
+        startX = lineArr[obj.direction];
+        startY = ((sh/2)+(sh/4));
+        objX = lineArr[obj.direction];
+        objY = obj.y;
+
+        positionArr = positionArr.filter((o) => { return !o.remove; });
+
+        if (predictedHit == 0) predictedHit = n;
+        else if (n == 0 && predictedHit > 0) predictedHit = 0;
+        else if (n > 0 && n >= predictedHit) predictedHit = n+1;
+
+        scoreView.innerText = (poorCount+(goodCount*2)+
+        (greatCount*3)+(perfectCount*4)).toString().padStart(3, "0");
+        break;
+    }
+};
+
+window.addEventListener("keydown", (e) => {
+    switch(e.keyCode) {
+        case 37:
+            advance(0);
+            break;
+        case 38:
+            advance(1);
+            break;
+        case 39:
+            advance(2);
+            break;
+        case 40:
+            advance(3);
+            break;
+    }
+});
 
 var startAnimation = function() {
     render = true;
@@ -511,7 +535,7 @@ var createButton = function() {
     if (positionArr.length > 0)
     for (var n = (positionArr.length-1); n >= 0; n--) {
         var obj = positionArr[n];
-        if (obj.y < (-5+0.25))
+        if (obj.y < (-5+0.3))
         directionArr = directionArr.filter((n) => {
             return n != obj.direction;
         });
@@ -531,6 +555,7 @@ var createButton = function() {
 
 var drawButton = function(x, y, direction) {
     var cubeGeometry = 
+    //new THREE.CylinderGeometry(0.225, 0.225, 0.1, 32);
     new THREE.BoxGeometry(0.45, 0.1, 0.45);
     var material = new THREE.MeshStandardMaterial( {
         color: 0xffffff,
@@ -598,6 +623,12 @@ var createMap = function() {
     var rightLine = drawLine(-1+(0.5*2)+(0.45/2));
     var downLine = drawLine(-1+(0.5*3)+(0.45/2));
 
+    /*
+    leftLine.loadTexture(createStripeTexture("orange"));
+    upLine.loadTexture(createStripeTexture("lightblue"));
+    rightLine.loadTexture(createStripeTexture("purple"));
+    downLine.loadTexture(createStripeTexture("darkred"));*/
+
     leftLine.userData.tag = "row";
     upLine.userData.tag = "row";
     rightLine.userData.tag = "row";
@@ -628,4 +659,45 @@ var createMap = function() {
     var material = new THREE.LineBasicMaterial({
         color: 0x000000
     });
+};
+
+var createStripeTexture = function(color) {
+    var canvas = document.createElement("canvas");
+    canvas.width = 0.45*100;
+    canvas.height = 10*100;
+
+    var ctx = canvas.getContext("2d");
+
+    ctx.globalAlpha = 0.5;
+    drawStripes(ctx, color, ((0.45*100)/2), ((10*100)/2));
+
+    for (var n = 0; n < 10; n++) {
+        var x = Math.random()*(0.45*100);
+        var y = Math.random()*(10*100);
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.random()*(Math.PI*2));
+        ctx.translate(-x, -y);
+
+        drawStripes(ctx, color, x, y);
+
+        ctx.restore();
+    };
+
+    return canvas.toDataURL();
+};
+
+var drawStripes = function(ctx, color, x, y) {
+    var width = (0.45*100)/10;
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x-((0.45*100)/2), y-(10*100),
+    0.45*100, (10*100)*2);
+
+    ctx.fillStyle = "#000";
+    for (var n = 0; n < 10; n+=2) {
+        ctx.fillRect(x-((0.45*100)/2)+(n*((0.45*100)/10)), y-((10*100)/2),
+        (0.45*100)/10, 10*100);
+    }
 };
