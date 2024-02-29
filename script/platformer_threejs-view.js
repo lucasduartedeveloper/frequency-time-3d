@@ -382,7 +382,7 @@ var advance = function(direction) {
     }
 };
 
-window.addEventListener("keydown", (e) => {
+document.addEventListener("keydown", (e) => {
     switch(e.keyCode) {
         case 37:
             advance(0);
