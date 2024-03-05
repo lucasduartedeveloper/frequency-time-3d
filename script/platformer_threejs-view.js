@@ -38,8 +38,8 @@ var load3D = function() {
     var mouse = new THREE.Vector2();
 
     renderer.domElement.onclick = function(e) {
-        mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
-        mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+        mouse.x = ( e.clientX / sw ) * 2 - 1;
+        mouse.y = - ( e.clientY / sh ) * 2 + 1;
 
         // update the picking ray with the camera and mouse position
         raycaster.setFromCamera( mouse, virtualCamera );
