@@ -1,8 +1,8 @@
 var uploadAlert = new Audio("audio/ui-audio/upload-alert.wav");
 var warningBeep = new Audio("audio/warning_beep.wav");
 
-var sw = window.innerWidth;
-var sh = window.innerHeight;
+var sw = 360; //window.innerWidth;
+var sh = 669; //window.innerHeight;
 
 var audioBot = true;
 var playerId = new Date().getTime();
