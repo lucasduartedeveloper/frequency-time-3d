@@ -285,6 +285,7 @@ $(document).ready(function() {
     };
 
     load3D();
+    eruda.destroy();
 });
 
 var failed = function(obj=false) {
