@@ -284,8 +284,14 @@ $(document).ready(function() {
         scrollSpeed = 1;
     };
 
+    font = new FontFace("MagicSound", "url(font/MagicSound.ttf)");
+    font.load();
+    document.fonts.add(font);
+
+    //$("*").css("font-family", "MagicSound");
+
     load3D();
-    eruda.destroy();
+    //eruda.destroy();
 });
 
 var failed = function(obj=false) {
